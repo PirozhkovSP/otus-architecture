@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import ru.edu.otus.architecture.game.command.Command;
+import ru.edu.otus.architecture.game.exception.CommandException;
 import ru.edu.otus.architecture.game.model.FuelConsumable;
 import ru.edu.otus.architecture.game.model.Movable;
 import ru.edu.otus.architecture.game.model.impl.Vector;
@@ -56,6 +57,6 @@ class CommandMacroTest {
     public void testExecuteWhenFuelNotEnoughtThenException() {
         when(fuelConsumable.getRemaining()).thenReturn(0);
 
-        assertThrows(IllegalStateException.class, macroCommand::execute);
+        assertThrows(CommandException.class, macroCommand::execute);
     }
 }
