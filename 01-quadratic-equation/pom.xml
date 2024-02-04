@@ -4,20 +4,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ru.edu.otus-architecture</groupId>
-    <artifactId>game-module</artifactId>
+    <parent>
+        <artifactId>otus-architecture</artifactId>
+        <groupId>ru.edu</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+
+    <artifactId>01-quadratic-equation</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.10.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
