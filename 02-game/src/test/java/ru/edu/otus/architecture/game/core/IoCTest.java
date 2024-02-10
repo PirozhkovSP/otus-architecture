@@ -22,10 +22,10 @@ class IoCTest {
 
     @Test
     void shouldResolveDependencyInCurrentScope() {
-        Function<Object[], Object> func = (Object[] args) -> 1;
+        Function<Object[], Object> func = args -> ((Integer)args[0]) + (Integer) args[1] + (Integer) args[2];
         Command command = IoC.resolve("IoC.Register", "someDependency", func);
+        command.execute();
 
-        assertEquals(1, (Integer) IoC.resolve("someDependency"));
+        assertEquals(6, (Integer) IoC.resolve("someDependency", 1, 2, 3));
     }
-
 }

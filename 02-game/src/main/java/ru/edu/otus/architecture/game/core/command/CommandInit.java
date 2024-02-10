@@ -11,13 +11,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 @RequiredArgsConstructor
 public class CommandInit implements Command {
     private static final ThreadLocal<Object> currentScope = new ThreadLocal<>();
-    private static final ConcurrentHashMap<String, Function<Object[], Object>> ROOT_SCOPE = new ConcurrentHashMap<>();
-    private boolean alreadyInitialized = false;
+    private static final Map<String, Function<Object[], Object>> ROOT_SCOPE = new ConcurrentHashMap<>();
+    private static volatile boolean alreadyInitialized = false;
 
     @Override
     public void execute() {
@@ -25,23 +24,23 @@ public class CommandInit implements Command {
             return;
         }
         synchronized (ROOT_SCOPE) {
-            ROOT_SCOPE.put("IoC.Scope.Current.Set", CommandSetCurrentScope::new);
+            ROOT_SCOPE.put("IoC.Scope.Current.Set", (args) -> new CommandSetCurrentScope(args[0]));
 
-            ROOT_SCOPE.put("IoC.Scope.Current.Clear", (Object[] args) -> new CommandClearCurrentScope());
+            ROOT_SCOPE.put("IoC.Scope.Current.Clear", (args) -> new CommandClearCurrentScope());
 
-            ROOT_SCOPE.put("IoC.Scope.Current", (Object[] args) -> currentScope.get() != null
+            ROOT_SCOPE.put("IoC.Scope.Current", (args) -> currentScope.get() != null
                     ? currentScope.get()
                     : ROOT_SCOPE
             );
 
             ROOT_SCOPE.put("IoC.Scope.Parent",
-                    (Object[] args) -> {throw new RuntimeException("The root scope has no a parent scope.");});
+                    (args) -> {throw new RuntimeException("The root scope has no a parent scope.");});
 
             ROOT_SCOPE.put("IoC.Scope.Create.Empty",
-                    (Object[] args) -> new HashMap<String, Function<Object[], Object>>());
+                    (args) -> new HashMap<String, Function<Object[], Object>>());
 
             ROOT_SCOPE.put("IoC.Scope.Create",
-                    (Object[] args) -> {
+                    (args) -> {
                         Map<String, Function<Object[], Object>> creatingScope =
                                 IoC.resolve("IoC.Scope.Create.Empty");
 
@@ -57,10 +56,10 @@ public class CommandInit implements Command {
                     });
 
             ROOT_SCOPE.put("IoC.Register",
-                    (Object[] args) -> new CommandRegisterDependency((String) args[0],
+                    (args) -> new CommandRegisterDependency((String) args[0],
                             (Function<Object[], Object>) args[1]));
 
-            Supplier<BiFunction<String, Object[], Object>> strategySupplier = () ->
+            BiFunction<String, Object[], Object> strategySupplier =
                     (String dependency, Object[] arg) -> {
                         var scope = currentScope.get() != null ? currentScope.get() : ROOT_SCOPE;
                         DependencyResolver dependencyResolver = new DependencyResolverImpl(scope);
