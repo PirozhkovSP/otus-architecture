@@ -20,10 +20,10 @@ public class CommandInit implements Command {
 
     @Override
     public void execute() {
-        if (alreadyInitialized) {
-            return;
-        }
         synchronized (ROOT_SCOPE) {
+            if (alreadyInitialized) {
+                return;
+            }
             ROOT_SCOPE.put("IoC.Scope.Current.Set", (args) -> new CommandSetCurrentScope(args[0]));
 
             ROOT_SCOPE.put("IoC.Scope.Current.Clear", (args) -> new CommandClearCurrentScope());
