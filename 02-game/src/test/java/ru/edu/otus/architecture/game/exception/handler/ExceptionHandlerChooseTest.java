@@ -1,5 +1,6 @@
 package ru.edu.otus.architecture.game.exception.handler;
 
+import static java.lang.Thread.sleep;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -18,14 +19,14 @@ import ru.edu.otus.architecture.game.exception.handler.impl.ExceptionHandlerRetr
 import ru.edu.otus.architecture.game.executor.CommandExecutor;
 import ru.edu.otus.architecture.game.executor.impl.CommandExecutorQueue;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 class ExceptionHandlerChooseTest {
 
     @Test
-    void testRetryAndLogStrategy() {
-        Deque<Command> queue = new ArrayDeque<>();
+    void testRetryAndLogStrategy() throws InterruptedException {
+        BlockingQueue<Command> queue = new ArrayBlockingQueue<>(5);
 
         ExceptionHandlerChoose exceptionHandler = new ExceptionHandlerChoose();
 
@@ -48,7 +49,8 @@ class ExceptionHandlerChooseTest {
         CommandExecutor commandExecutor = new CommandExecutorQueue(queue, exceptionHandler);
 
         queue.add(throwingCommand);
-        commandExecutor.execute();
+        commandExecutor.start();
+        sleep(1000);
 
         verify(commandRetryNTimes, times(1)).execute();
         verify(commandLogExceptionAfterRetry, times(1)).execute();
