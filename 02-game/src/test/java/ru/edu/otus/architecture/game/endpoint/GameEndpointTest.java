@@ -5,11 +5,13 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -37,13 +39,13 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
+@Import(TestConfig.class)
 class GameEndpointTest {
     @LocalServerPort
     private int port;
     private WebSocketStompClient webSocketStompClient;
     private final BlockingQueue<Command> commandsQueue = new ArrayBlockingQueue<>(1);
     private final BlockingQueue<AgentResponse> answerQueue = new ArrayBlockingQueue<>(1);
-
 
     @BeforeEach
     void setup() {
@@ -52,7 +54,7 @@ class GameEndpointTest {
         webSocketStompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
         new CommandInit().execute();
-        Function<Object[], Object> func = (args) -> "testGameId";
+        Function<Object[], Object> func = (args) -> "testGame";
         ((Command) IoC.resolve("IoC.Register", "IoC.Scope.Id", func)).execute();
         Function<Object[], Object> findGameFunc = args -> {
             String gameId = IoC.resolve("IoC.Scope.Id");
@@ -79,7 +81,7 @@ class GameEndpointTest {
     @Test
     void sendCommandTest() throws ExecutionException, InterruptedException, TimeoutException {
         Object[] args = {new Vector(0, 0)};
-        AgentMessage agentMessage = new AgentMessage("testGameId", "testObjectId", "testOperationId",
+        AgentMessage agentMessage = new AgentMessage("testGame", "testObjectId", "testOperationId",
                 args);
 
         StompSession session = webSocketStompClient.connectAsync(String.format("ws://localhost:%d/ws", port),
@@ -101,7 +103,13 @@ class GameEndpointTest {
             }
         });
 
-        session.send("/game/action", agentMessage);
+        StompHeaders headers = new StompHeaders();
+        headers.add(StompHeaders.DESTINATION, "/game/action");
+        headers.add(AUTHORIZATION,
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" +
+                        ".eyJpc3MiOiJBdXRoIG1vZHVsZSIsInN1YiI6IlBsYXllciBkZXRhaWxzIiwidXNlcklkIjoidGVzdFVzZXIiLCJnYW1lSWQiOiJ0ZXN0R2FtZSIsInJvbGVzIjpbIlBMQVlFUiJdLCJpYXQiOjE3MTE4MTE1NTAsImp0aSI6IjYxY2M3YjhmLTFhNDUtNGFiNi1hMGIxLTJmNGYzYTkwZjQ4NCIsIm5iZiI6MTcxMTgxMTU1MX0" +
+                        ".JW9joMDxWAFGZ4O5VQJLl3gSXUbC1rOVb_DV0lG7iHQ");
+        session.send(headers, agentMessage);
 
         await()
                 .atMost(1, SECONDS)
