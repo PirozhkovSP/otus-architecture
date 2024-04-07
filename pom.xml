@@ -18,6 +18,7 @@
     <modules>
         <module>01-quadratic-equation</module>
         <module>02-game</module>
+        <module>auth</module>
     </modules>
 
     <properties>
